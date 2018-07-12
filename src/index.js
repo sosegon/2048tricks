@@ -361,30 +361,12 @@ class Trick extends React.Component {
 
 var BoardViewRendered = ReactDOM.render(<BoardView />, document.getElementById('boardDiv'));
 
-// To be called from Android
-var restartGame = function(logCode) {
-  if(typeof(Anki) !== "undefined") {
-    Anki.getBoardState(BoardViewRendered.getBoardStateAsString(), logCode);
-    BoardViewRendered.restartGame();
-  }
-}
-
-var goToAnki = function (logCode) {
-  if(typeof(Anki) !== "undefined") {
-    Anki.getBoardState(BoardViewRendered.getBoardStateAsString(), logCode);
-  }
-}
-
-var continuePlaying = function() {
-  BoardViewRendered.continuePlaying();
-};
-
 // Adjust the board to the device's screen
 var rescale = function(screenHeight, screenWidth) {
-  //var screenHeight = screen.height;
-  //var screenWidth = screen.width;
-  var screenHeight = screenHeight;// | window.innerHeight; //* window.devicePixelRatio;
-  var screenWidth = screenWidth;// | window.innerWidth; //* window.devicePixelRatio;
+  var screenHeight = screen.height;
+  var screenWidth = screen.width;
+  //var screenHeight = screenHeight;// | window.innerHeight; //* window.devicePixelRatio;
+  //var screenWidth = screenWidth;// | window.innerWidth; //* window.devicePixelRatio;
   var screenRatio = screenWidth / screenHeight;
 
   // Scrolling on the following devices
@@ -462,7 +444,5 @@ var rescale = function(screenHeight, screenWidth) {
   var board = document.getElementById("boardDiv");
   board.style.zoom = scale;
   board.style.display = "block";
-  //console.log("scalew: " + scale);
 };
-
-//window.setTimeout(rescale, 300);
+rescale();
