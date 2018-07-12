@@ -81,6 +81,8 @@ class BoardView extends React.Component {
       }
       // TODO: AnkiGame, Executing the double trick can make end the game. Handle that
       this.setState({board: execute.apply(this.state.board)});
+    } else if(event.keyCode === 82) {
+      this.restartGame();
     }
   }
   handleTouchStart(event) {
@@ -212,8 +214,13 @@ class BoardView extends React.Component {
           {cells}
           {tiles}
         </div>
-        <div className="scores-container">
-          {scoreElem} {bestScoreElem}
+        <div>
+          <div className="scores-container">
+            {scoreElem} {bestScoreElem}
+            <div className="restart-container">
+              <span onClick={this.restartGame.bind(this)}>R</span>
+            </div>
+          </div>
         </div>
       </div>
     );
