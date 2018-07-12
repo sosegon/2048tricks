@@ -1,42 +1,3 @@
-// Uncomment just for testing purposes
-var Anki = {
-  hasPointsForTrick: function(requiredPoints) {
-    console.log("required points: " + requiredPoints);
-    return true;
-  },
-  noPointsForTrick: function(trickName) {
-    console.log("no points for trick: " + trickName);
-  },
-  hasCoinsForTrick: function(requiredCoins) {
-    console.log("required coins: " + requiredCoins);
-    return true;
-  },
-  noCoinsForTrick: function(trickName) {
-    console.log("no money for trick: " + trickName);
-  },
-  unableTrick: function(trickName) {
-    console.log("unable to do " + trickName);
-  },
-  doTrick: function(trickName) {
-    console.log("do trick " + trickName)
-  },
-  updateBestScore: function(score) {
-    console.log("best score " + score);
-  },
-  getAnkiPoints: function() {
-    return 50000;
-  },
-  getAnkiCoins: function() {
-    return 20;
-  },
-  hasLost: function() {
-      console.log("lost");
-  },
-  hasWon: function(){
-    console.log("won");
-  }
-}
-
 class BoardView extends React.Component {
   constructor(props) {
     super(props);
@@ -48,37 +9,31 @@ class BoardView extends React.Component {
     var bestScore = this.storageManager.getBestScore();
     var history = this.storageManager.getHistory();
     this.state = {board: new Board(previousState, bestScore, history)};
-    this.points = Anki.getAnkiPoints();
-    this.coins = Anki.getAnkiCoins();
     this.tricksRevealed = false;
     this.tricks = {
       gift: {
         name: 'gift',
-        coins: 10,
-        points: 100,
         isPermitted: this.state.board.hasEmptyCells,
-        execute: this.state.board.addGift
+        execute: this.state.board.addGift,
+        keyCode: 49
       },
       double: {
         name: 'double',
-        coins: 20,
-        points: 500,
         isPermitted: this.state.board.ableToDouble,
-        execute: this.state.board.double
+        execute: this.state.board.double,
+        keyCode: 50
       },
       bomb: {
         name: 'bomb',
-        coins: 30,
-        points: 1000,
         isPermitted: this.state.board.ableToDeleteTwos,
-        execute: this.state.board.removeTwos
+        execute: this.state.board.removeTwos,
+        keyCode: 51
       },
       undo: {
         name: 'undo',
-        coins: 40,
-        points: 2000,
         isPermitted: this.state.board.hasHistory,
-        execute: this.state.board.undo
+        execute: this.state.board.undo,
+        keyCode: 52
       }
     };
   }
@@ -88,8 +43,6 @@ class BoardView extends React.Component {
     this.setState({board: new Board(undefined, bestScore, undefined)});
     this.storageManager.clearGameState();
     this.storageManager.clearHistory();
-    this.points = Anki.getAnkiPoints();
-    this.coins = Anki.getAnkiCoins();
   }
   getBoardStateAsString() {
     return this.state.board.asString();
@@ -101,8 +54,33 @@ class BoardView extends React.Component {
       //this.tricksRevealed = false;
       this.setState({board: this.state.board.move(direction)});
       if(this.state.board.hasLost() && !this.ableToDoAnyTrick()) {
-        Anki.hasLost();
+        // TODO: Lost
       }
+    } else if(event.keyCode >= 49 && event.keyCode <= 52) {
+      var tricks = this.tricks;
+      var board = this.board;
+      var t = Object.keys(tricks).filter(function(key, index) {
+        var trick = tricks[key];
+
+        if(trick['keyCode'] === event.keyCode) {
+            return true;
+        }
+
+        return false;
+      });
+
+      var trick = this.tricks[t[0]];
+      var trickName = trick["name"];
+      var isPermitted = trick["isPermitted"];
+      var execute = trick["execute"];
+
+      // Use apply to bind the object
+      if(!isPermitted.apply(this.state.board)){
+        // TODO: Can not do trick
+        return;
+      }
+      // TODO: AnkiGame, Executing the double trick can make end the game. Handle that
+      this.setState({board: execute.apply(this.state.board)});
     }
   }
   handleTouchStart(event) {
@@ -129,7 +107,7 @@ class BoardView extends React.Component {
       //this.tricksRevealed = false;
       this.setState({board: this.state.board.move(direction)});
       if(this.state.board.hasLost() && !this.ableToDoAnyTrick()) {
-        Anki.hasLost();
+        // TODO: Lost
       }
     }
   }
@@ -149,55 +127,24 @@ class BoardView extends React.Component {
     }
 
     var trick = this.tricks[trickName];
-    var requiredCoins = trick["coins"];
     var trickName = trick["name"];
-    var requiredPoints = trick["points"];
     var isPermitted = trick["isPermitted"];
     var execute = trick["execute"];
 
-    if(!Anki.hasPointsForTrick(requiredPoints)) {
-      Anki.noPointsForTrick(trickName, requiredPoints, this.getBoardStateAsString());
-      return;
-    }
-
-    if(!Anki.hasCoinsForTrick(requiredCoins)) {
-      Anki.noCoinsForTrick(trickName, requiredCoins, this.getBoardStateAsString());
-      return;
-    }
-
     // Use apply to bind the object
     if(!isPermitted.apply(this.state.board)){
-      Anki.unableTrick(trickName, this.getBoardStateAsString());
+      // TODO: Can not do trick
       return;
     }
     // TODO: AnkiGame, Executing the double trick can make end the game. Handle that
-    Anki.doTrick(trickName, requiredCoins, this.getBoardStateAsString());
     this.setState({board: execute.apply(this.state.board)});
-
-    // After applying a trick, the number of coins changed. Update the variable
-    // since the visual of the tricks depends on that value
-    this.coins = Anki.getAnkiCoins();
   }
   ableToDoAnyTrick() {
     var tricks = this.tricks;
     var board = this.state.board;
-    var points = this.points;
-    var coins = this.coins;
 
     var t = Object.keys(tricks).filter(function(key, index) {
       var trick = tricks[key];
-
-      var requiredPoints = trick['points'];
-      var availablePoints = points;
-      if(availablePoints < requiredPoints) {
-        return false;
-      }
-
-      var requiredCoins = trick['coins'];
-      var availableCoins = coins;
-      if(availableCoins < requiredCoins) {
-        return false;
-      }
 
       if(!trick['isPermitted'].apply(board)) {
         return false;
@@ -355,8 +302,6 @@ class BestScore extends React.Component {
 class Trick extends React.Component {
   render() {
     var Board = this.props.Board;
-    var points = Board.points;
-    var coins = Board.coins;
     var tricks = Board.tricks;
 
     var trickName = this.props.trickName;
@@ -364,23 +309,12 @@ class Trick extends React.Component {
     var generateTrickClass = function(trickName) {
       var trick = tricks[trickName];
 
-      var requiredPoints = trick['points'];
-      var availablePoints = points;
-
-      var requiredCoins = trick['coins'];
-      var availableCoins = coins;
-
       var isPermitted = trick['isPermitted'];
 
       var trickClass = 'trick';
+      trickClass += ' trick_' + trickName;
 
-      if(availablePoints >= requiredPoints){
-        trickClass += ' trick_' + trickName;
-      } else {
-        trickClass += ' trick_blocked';
-      }
-
-      if(availableCoins < requiredCoins || !isPermitted.apply(Board.state.board)) {
+      if(!isPermitted.apply(Board.state.board)) {
         trickClass += ' trick_disabled';
       }
 
@@ -389,37 +323,20 @@ class Trick extends React.Component {
 
     var generateCoinsClass = function(trickName) {
       var trick = tricks[trickName];
-
-      var requiredPoints = trick['points'];
-      var availablePoints = points;
-
-      var requiredCoins = trick['coins'];
-      var availableCoins = coins;
-
       var coinsClass = 'trickCoins';
-
-      if(availablePoints < requiredPoints){
-        coinsClass += ' trickCoinsBlocked';
-      } else if(availableCoins < requiredCoins) {
-        coinsClass += ' trickCoinsDisabled';
-      }
 
       return coinsClass;
     }
 
     var generatePointsClass = function(trickName) {
       var trick = tricks[trickName];
-
-      var requiredPoints = trick['points'];
-      var availablePoints = points;
-
       var pointsClass = 'trickPoints';
 
-      if(availablePoints < requiredPoints) {
-        pointsClass += ' trickPointsDisabled';
-      }
-
       return pointsClass;
+    }
+
+    var keyCodeToChar = function(keyCode) {
+      return String.fromCharCode(keyCode);
     }
 
     return (
@@ -428,10 +345,7 @@ class Trick extends React.Component {
           <span className={generateTrickClass(trickName)} onClick={Board.tryTrick.bind(Board, trickName)}/>
         </div>
         <div>
-          <span className={generatePointsClass(trickName)}>{tricks[trickName]['points']}☆</span>
-        </div>
-        <div>
-          <span className={generateCoinsClass(trickName)}>{tricks[trickName]['coins']}⛁</span>
+          <span className={generatePointsClass(trickName)}>{keyCodeToChar(tricks[trickName]['keyCode'])}</span>
         </div>
       </div>
     )

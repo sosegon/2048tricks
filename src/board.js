@@ -152,14 +152,13 @@ Board.prototype.moveLeft = function () {
     }
     this.cells[row] = resultRow;
   }
-  
+
   this.score += this.addition;
   if(this.score > this.bestScore) {
     this.bestScore = this.score;
-    Anki.updateBestScore(this.bestScore);
   }
   if(this.won && !this.continueAfterWon) {
-    Anki.hasWon(this.asString());
+    // TODO: Won
   }
   return hasChanged;
 };
@@ -420,7 +419,7 @@ Board.prototype.asString =  function () {
 }
 
 Board.prototype.updateHistory = function(state) {
-  // TODO: AnkiGame, Check the hard-coded value
+  // TODO: Check the hard-coded value
   if(this.history.length >= 10) {
     this.history.shift();
   }
